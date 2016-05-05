@@ -45,7 +45,7 @@ func validateTicketLength(ticket string) *types.CasError {
 
 func validateTicketFormat(ticket string) *types.CasError {
     if ticket[0:3] != "ST-" {
-        return &types.CasError{Error: fmt.Errorf("Required prefix `%s` is missing.", "ST-")}
+        return &types.CasError{Error: fmt.Errorf("Required prefix `%s` is missing.", "ST-"), CasErrorCode: types.CAS_ERROR_CODE_INVALID_TICKET_SPEC}
     }
     
     return nil

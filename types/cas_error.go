@@ -14,6 +14,10 @@ const (
     CAS_ERROR_CODE_INVALID_SERVICE
     // CAS_ERROR_CODE_INTERNAL_ERROR "an internal error occurred during ticket validation"
     CAS_ERROR_CODE_INTERNAL_ERROR
+    // CAS_ERROR_CODE_UNAUTHORIZED_SERVICE_PROXY "the service is not authorized to perform proxy authentication"
+    CAS_ERROR_CODE_UNAUTHORIZED_SERVICE_PROXY
+    // CAS_ERROR_CODE_INVALID_PROXY_CALLBACK "The proxy callback specified is invalid. The credentials specified for proxy authentication do not meet the security requirements"
+    CAS_ERROR_CODE_INVALID_PROXY_CALLBACK
 )
 
 // CasErrorCodes contains all error codes in string format
@@ -23,6 +27,8 @@ var CasErrorCodes = [...]string {
     "INVALID_TICKET",
     "INVALID_SERVICE",
     "INTERNAL_ERROR",
+    "UNAUTHORIZED_SERVICE_PROXY",
+    "INVALID_PROXY_CALLBACK",
 }
 
 func (casErrorCode CasErrorCode) String() string {

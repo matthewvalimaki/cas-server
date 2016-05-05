@@ -1,9 +1,7 @@
 package validators
 
 import (   
-    "fmt"
     "errors"
-    "sort"
     
     "github.com/matthewvalimaki/cas-server/types"
 )
@@ -11,12 +9,12 @@ import (
 // ValidateService validates service
 func ValidateService(ID string, config *types.Config) (*types.CasError) {
     err := validateServiceIDLength(ID)    
-    if (err != nil) {
+    if err != nil {
         return err
     }
     
     err = validateServiceID(ID, config)    
-    if (err != nil) {
+    if err != nil {
         return err
     }
 
@@ -31,13 +29,10 @@ func validateServiceIDLength(ID string) *types.CasError {
     return nil
 }
 
-func validateServiceID(ID string, config *types.Config) *types.CasError {
-    sort.Strings(config.FlatServiceIDList)
-    
-    i := sort.SearchStrings(config.FlatServiceIDList, ID)
-    if i < len(config.FlatServiceIDList) && config.FlatServiceIDList[i] == ID {
+func validateServiceID(serviceID string, config *types.Config) *types.CasError {
+    if _, ok := config.FlatServiceIDList[serviceID]; ok {
         return nil
     }
 
-    return &types.CasError{Error: fmt.Errorf("Unknown service `%s`.", ID), CasErrorCode: types.CAS_ERROR_CODE_INVALID_SERVICE}
+    return &types.CasError{Error: errors.New("Unknown service."), CasErrorCode: types.CAS_ERROR_CODE_INVALID_SERVICE}
 }

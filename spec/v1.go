@@ -5,6 +5,7 @@ import (
     "net/http"
     "text/template"
     
+    "github.com/matthewvalimaki/cas-server/tools"
     "github.com/matthewvalimaki/cas-server/validators"
     "github.com/matthewvalimaki/cas-server/types"
     "github.com/matthewvalimaki/cas-server/storage"
@@ -12,6 +13,7 @@ import (
 )
 
 type loginResponseFnType func(*types.CasError, *types.Ticket, http.ResponseWriter, *http.Request)
+type validateValidatorFnType func(ID string, ticket string)
 type validateResponseFnType func(bool, *types.CasError, *types.Ticket, http.ResponseWriter, *http.Request)
 
 var (
@@ -30,8 +32,7 @@ func SupportV1(strgObject storage.IStorage, cfg *types.Config) {
     login()
     validate()
     
-    loginResponseFn = loginResponse 
-    validateResponseFn = validateResponse
+    loginResponseFn = loginResponse
 }
 
 func login() {
@@ -39,12 +40,21 @@ func login() {
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
+    err := validators.ValidateRequest(r)
+    if err != nil {
+        loginResponseFn(err, nil, w, r)
+        tools.LogRequest(r, err.Error.Error())
+        return
+    }    
+    
     service := r.URL.Query().Get("service")
     
-    err := validators.ValidateService(service, config)
+    err = validators.ValidateService(service, config)
     
     if err != nil {
         loginResponseFn(err, nil, w, r)
+        tools.LogService(service, err.Error.Error())
+        security.ProcessFailedLogin(r.RemoteAddr)
         return
     }
     
@@ -66,33 +76,41 @@ func loginResponse(casError *types.CasError, ticket *types.Ticket, w http.Respon
 }
 
 func validate() {
-    http.HandleFunc("/v1/validate", handleValidate)
+    http.HandleFunc("/v1/validate", setupValidate)
 }
 
-func handleValidate(w http.ResponseWriter, r *http.Request) {
-    service := r.URL.Query().Get("service")
+func setupValidate(w http.ResponseWriter, r *http.Request) {
+    serviceTicket, err := runValidators(w, r)
+    
+    if err != nil {
+        validateResponse(false, err, nil, w, r)
+        return
+    }
+    
+    validateResponse(true, nil, serviceTicket, w, r)
+}
+
+func runValidators(w http.ResponseWriter, r *http.Request) (*types.Ticket, *types.CasError) {
     ticket := r.URL.Query().Get("ticket")
     
     err := validators.ValidateTicket(ticket)
-    
     if err != nil {
-        validateResponseFn(false, err, nil, w, r)
-        return
-    }
-    
-    if len(service) == 0 {
-        http.Error(w, "Query Parameter `service` must be defined.", http.StatusInternalServerError)
-        return
+        return nil, err
     }
 
+    service := r.URL.Query().Get("service")    
+    serviceError := validators.ValidateService(service, config)
+    if serviceError != nil {
+        return nil, serviceError
+    }
+    
     serviceTicket := &types.Ticket{Service: service, Ticket: ticket}
     err = security.ValidateServiceTicket(strg, serviceTicket)
-
     if err != nil {
-        validateResponseFn(false, err, serviceTicket, w, r)
-        return
+        return nil, err
     }
-    validateResponseFn(true, nil, serviceTicket, w, r)
+    
+    return serviceTicket, nil
 }
 
 func validateResponse(valid bool, casError *types.CasError, ticket *types.Ticket, w http.ResponseWriter, r *http.Request) {

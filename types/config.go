@@ -8,7 +8,8 @@ import (
 type Config struct {
     Port int
     Services map[string]Service
-    FlatServiceIDList []string
+    
+    FlatServiceIDList map[string][]string
 }
 
 // PortToString converts integer port to string
@@ -17,8 +18,13 @@ func (c Config) PortToString() string {
 }
 
 // FlattenServiceIDs takes all service ids and flattens them
-func (c *Config) FlattenServiceIDs() {
-    for key := range c.Services {
-        c.FlatServiceIDList = append(c.FlatServiceIDList, c.Services[key].ID...)
+func (c *Config) FlattenServiceIDs() {   
+    c.FlatServiceIDList = make(map[string][]string)
+    
+    for key := range c.Services {        
+        for _, serviceID := range c.Services[key].ID {
+            
+            c.FlatServiceIDList[serviceID] = append(c.FlatServiceIDList[serviceID], key)
+        }
     }
 }

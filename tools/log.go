@@ -3,6 +3,8 @@ package tools
 import (
     "fmt"
     "time"
+    "net"
+    "net/http"
     
     "github.com/matthewvalimaki/cas-server/types"
 )
@@ -27,7 +29,19 @@ func LogST(ticket *types.Ticket, message string) {
     log("ST", fmt.Sprintf("[%s] [%s] %s", ticket.Service, ticket.Ticket, message))
 }
 
+// LogService logs service related message
+func LogService(ID string, message string) {
+    log("service", fmt.Sprintf("[%s] %s", ID, message))
+}
+
 // LogAdmin logs admin message
 func LogAdmin(message string) {
     log("admin", message)
+}
+
+// LogRequest logs plain request
+func LogRequest(r *http.Request, message string) {
+    ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+    
+    log("request", fmt.Sprintf("[%s] %s", ip, message))
 }

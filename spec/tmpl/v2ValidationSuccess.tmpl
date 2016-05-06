@@ -1,7 +1,7 @@
 <cas:serviceResponse xmlns:cas='http://www.yale.edu/tp/cas'>
     <cas:authenticationSuccess>
-        {{ if ProxyGrantingTicket }}
-            {{ ProxyGrantingTicket }}
+        {{ if proxyGrantingTicketIOU }}
+            {{ proxyGrantingTicketIOU }}
         {{ end }}
 
         <cas:user>{{.Username}}</cas:user>

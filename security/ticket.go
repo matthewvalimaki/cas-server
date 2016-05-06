@@ -22,8 +22,16 @@ func createNewTicket(ticketType string) types.Ticket {
     return types.Ticket{Ticket: ticketType + "-" + string(b)} 
 }
 
-// CreateNewProxyGrantingTicket creates new proxy granting ticket for a service
-func CreateNewProxyGrantingTicket(strg storage.IStorage, service *types.Service, proxyService string) (*types.Ticket, *types.CasError) {
+// CreateNewProxyGrantingTicket creates new PGT
+func CreateNewProxyGrantingTicket() (*types.Ticket, *types.CasError) {
+    ticket := createNewTicket("PGT")
+    
+    return &ticket, nil
+}
+
+// CreateNewProxyGrantingTicketIOU creates new proxy granting ticket for a service
+// see: https://jasig.github.io/cas/4.2.x/protocol/CAS-Protocol-Specification.html#proxy-granting-ticket-iou
+func CreateNewProxyGrantingTicketIOU() (*types.Ticket, *types.CasError) {
     ticket := createNewTicket("PGTIOU")
     
     return &ticket, nil
@@ -35,7 +43,7 @@ func CreateNewServiceTicket(strg storage.IStorage, serviceID string) (*types.Tic
 	ticket := createNewTicket("ST")
     ticket.Service = serviceID
     
-    strg.SaveNewServiceTicket(&ticket)
+    strg.SaveTicket(&ticket)
     
     tools.LogST(&ticket, "ticket created")
     

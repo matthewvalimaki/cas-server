@@ -6,7 +6,7 @@ import (
 
 // IStorage interface for all Storages
 type IStorage interface {
-    SaveNewServiceTicket(*types.Ticket)
+    SaveTicket(*types.Ticket)
     DoesServiceTicketExist(st string) bool
     DeleteServiceTicket(st string)
 }

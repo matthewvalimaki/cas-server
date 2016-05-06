@@ -7,7 +7,7 @@ import (
 // Config contains all of configuration
 type Config struct {
     Port int
-    Services map[string]Service
+    Services map[string]*Service
     
     FlatServiceIDList map[string][]string
 }

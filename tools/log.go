@@ -24,6 +24,10 @@ func Log(message string) {
     log("generic", message)
 }
 
+func LogError(message string) {
+    log("error", message)
+}
+
 // LogST prints ST related log message
 func LogST(ticket *types.Ticket, message string) {
     log("ST", fmt.Sprintf("[%s] [%s] %s", ticket.Service, ticket.Ticket, message))

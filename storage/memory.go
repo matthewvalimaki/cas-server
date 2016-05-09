@@ -14,9 +14,9 @@ func NewMemoryStorage() *MemoryStorage {
     return &MemoryStorage{tickets: make(map[string]*types.Ticket)}
 }
 
-// DoesServiceTicketExist checks if given Service Ticket exists
-func (s MemoryStorage) DoesServiceTicketExist(st string) bool {   
-    if _, ok := s.tickets[st]; ok {
+// DoesTicketExist checks if given ticket exists
+func (s MemoryStorage) DoesTicketExist(ticket string) bool {   
+    if _, ok := s.tickets[ticket]; ok {
         return true
     }
     
@@ -28,7 +28,7 @@ func (s MemoryStorage) SaveTicket(ticket *types.Ticket) {
     s.tickets[ticket.Ticket] = ticket
 }
 
-// DeleteServiceTicket deletes given ticket
-func (s MemoryStorage) DeleteServiceTicket(st string) {
-    delete(s.tickets, st)
+// DeleteTicket deletes given ticket
+func (s MemoryStorage) DeleteTicket(ticket string) {
+    delete(s.tickets, ticket)
 }

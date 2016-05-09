@@ -2,6 +2,7 @@ package spec
 
 import (
     "fmt"
+    "errors"
     "net/http"
     "text/template"
     
@@ -12,13 +13,8 @@ import (
     "github.com/matthewvalimaki/cas-server/security"
 )
 
-type loginResponseFnType func(*types.CasError, *types.Ticket, http.ResponseWriter, *http.Request)
-type validateValidatorFnType func(ID string, ticket string)
-type validateResponseFnType func(bool, *types.CasError, *types.Ticket, http.ResponseWriter, *http.Request)
-
 var (
-    loginResponseFn loginResponseFnType
-    validateResponseFn validateResponseFnType
+    specTemplatePath = "spec/tmpl/"
     
     strg storage.IStorage
     config *types.Config
@@ -31,8 +27,6 @@ func SupportV1(strgObject storage.IStorage, cfg *types.Config) {
           
     login()
     validate()
-    
-    loginResponseFn = loginResponse
 }
 
 func login() {
@@ -40,19 +34,31 @@ func login() {
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
+    if config == nil {
+        err := &types.CasError{Error: errors.New("`config` has not been set"), CasErrorCode: types.CAS_ERROR_CODE_INTERNAL_ERROR}
+        loginResponse(err, nil, w, r)
+        tools.LogRequest(r, err.Error.Error())
+        return
+    }
+    
+    if strg == nil {
+        err := &types.CasError{Error: errors.New("`strg` has not been set"), CasErrorCode: types.CAS_ERROR_CODE_INTERNAL_ERROR}
+        loginResponse(err, nil, w, r)
+        tools.LogRequest(r, err.Error.Error())
+        return
+    }
+    
     err := validators.ValidateRequest(r)
     if err != nil {
-        loginResponseFn(err, nil, w, r)
+        loginResponse(err, nil, w, r)
         tools.LogRequest(r, err.Error.Error())
         return
     }    
     
-    service := r.URL.Query().Get("service")
-    
+    service := r.URL.Query().Get("service")  
     err = validators.ValidateService(service, config)
-    
     if err != nil {
-        loginResponseFn(err, nil, w, r)
+        loginResponse(err, nil, w, r)
         tools.LogService(service, err.Error.Error())
         security.ProcessFailedLogin(r.RemoteAddr)
         return
@@ -60,15 +66,19 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
     
     var serviceTicket, _ = security.CreateNewServiceTicket(strg, service)
     
-    loginResponseFn(nil, serviceTicket, w, r)
+    loginResponse(nil, serviceTicket, w, r)
 }
 
 func loginResponse(casError *types.CasError, ticket *types.Ticket, w http.ResponseWriter, r *http.Request) {
     if casError != nil {
-        w.Header().Set("Content-Type", "application/xml;charset=UTF-8")
-        t, _ := template.ParseFiles("spec/tmpl/v2ValidationFailure.tmpl")
+        if casError.CasErrorCode == types.CAS_ERROR_CODE_INTERNAL_ERROR {
+            w.WriteHeader(http.StatusInternalServerError)
+        }
         
-        t.Execute(w, map[string] string {"Error": casError.Error.Error(), "CasErrorCode": casError.CasErrorCode.String()})
+        w.Header().Set("Content-Type", "application/xml;charset=UTF-8")
+        t, _ := template.ParseFiles(specTemplatePath + "v2ValidationFailure.tmpl")
+        
+        t.Execute(w, map[string]string {"Error": casError.Error.Error(), "CasErrorCode": casError.CasErrorCode.String()})
         return
     }
     

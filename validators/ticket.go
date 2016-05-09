@@ -44,11 +44,13 @@ func validateTicketLength(ticket string) *types.CasError {
 }
 
 func validateTicketFormat(ticket string) *types.CasError {
-    if ticket[0:3] != "ST-" {
-        return &types.CasError{Error: fmt.Errorf("Required prefix `%s` is missing.", "ST-"), CasErrorCode: types.CAS_ERROR_CODE_INVALID_TICKET_SPEC}
+    if ticket[0:3] == "ST-" {
+        return nil
+    } else if ticket[0:4] == "PGT-" {
+        return nil
     }
-    
-    return nil
+
+    return &types.CasError{Error: errors.New("Required ticket prefix is missing. Supported prefixes are: [ST, PGT]"), CasErrorCode: types.CAS_ERROR_CODE_INVALID_TICKET_SPEC}
 }
 
 func validateTicketTimestamp(ticket string) *types.CasError {

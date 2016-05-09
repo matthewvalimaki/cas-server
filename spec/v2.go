@@ -3,7 +3,6 @@ package spec
 import (
     "net/http"
     "text/template"
-    "encoding/json"
 
     "github.com/matthewvalimaki/cas-server/types"
     "github.com/matthewvalimaki/cas-server/validators"
@@ -14,6 +13,7 @@ import (
 func SupportV2() {
     validateV2()
     proxyV2()
+    proxyValidateV2()
 }
 
 func validateV2() {
@@ -22,6 +22,12 @@ func validateV2() {
 
 func proxyV2() {
     http.HandleFunc("/v2/proxy", setupProxyV2)
+}
+
+func proxyValidateV2() {
+    // we use existing setup for `validate` as the behavior as well as the
+    // output is 1:1 of what is required
+    http.HandleFunc("/v2/serviceValidate", setupValidateV2)
 }
 
 func setupValidateV2(w http.ResponseWriter, r *http.Request) {
@@ -113,19 +119,55 @@ func validateResponseV2(format string, casError *types.CasError, proxyGrantingTi
             t.Execute(w, map[string] string {"Username": "test", "proxyGrantingTicketIOU": proxyGrantingTicketIOU.Ticket})
         }
     } else {
-        // response := new({})
-        
-        // js, err := json.Marshal({"serviceResponse": {}})
-        // if err != nil {
-        //     http.Error(w, err.Error(), http.StatusInternalServerError)
-        //     return
-        // }
-  
-        w.Header().Set("Content-Type", "application/json;charset=UTF-8")
-        w.Write()
+
     }
 }
 
 func setupProxyV2(w http.ResponseWriter, r *http.Request) {
-    err := validators.ValidateProxyTicket()
+    err := runProxyValidatorsV2(w, r)
+    if err != nil {
+        proxyResponseV2(nil, err, w, r)
+        return
+    }
+    
+    proxyTicket, err := security.CreateNewProxyTicket()
+    if err != nil {
+        proxyResponseV2(nil, err, w, r)
+        return
+    }
+    
+    strg.SaveTicket(proxyTicket)
+    
+    proxyResponseV2(proxyTicket, nil, w, r)
+}
+
+func runProxyValidatorsV2(w http.ResponseWriter, r *http.Request) *types.CasError {
+    pgt := r.URL.Query().Get("pgt")
+    err := validators.ValidateTicket(pgt)
+    if err != nil {
+        return err
+    }
+    
+    targetService := r.URL.Query().Get("targetService")
+    ticket := &types.Ticket{Service: targetService, Ticket: pgt}
+    err = security.ValidateProxyGrantingTicket(strg, ticket)
+    if err != nil {
+        return err
+    }
+    
+    return nil
+}
+
+func proxyResponseV2(proxyTicket *types.Ticket, casError *types.CasError, w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/xml;charset=UTF-8")
+    
+    if casError != nil {
+        t, _ := template.ParseFiles("spec/tmpl/v2ProxyFailure.tmpl")
+        
+        t.Execute(w, map[string] string {"Error": casError.Error.Error(), "CasErrorCode": casError.CasErrorCode.String()})
+    } else {
+        t, _ := template.ParseFiles("spec/tmpl/v2ProxySuccess.tmpl")
+        
+        t.Execute(w, map[string] string {"ProxyTicket": proxyTicket.Ticket})
+    }
 }

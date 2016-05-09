@@ -33,6 +33,11 @@ func LogST(ticket *types.Ticket, message string) {
     log("ST", fmt.Sprintf("[%s] [%s] %s", ticket.Service, ticket.Ticket, message))
 }
 
+// LogPGT prints PGT related log message
+func LogPGT(ticket *types.Ticket, message string) {
+    log("LogPGT", fmt.Sprintf("[%s] [%s] %s", ticket.Service, ticket.Ticket, message))
+}
+
 // LogService logs service related message
 func LogService(ID string, message string) {
     log("service", fmt.Sprintf("[%s] %s", ID, message))

@@ -25,7 +25,7 @@ func handleLoginV3(w http.ResponseWriter, r *http.Request) {
         }
         
         if method == "POST" {
-            loginResponseFn = loginResponseV3
+            // loginResponseFn = loginResponseV3
         }
     }
     

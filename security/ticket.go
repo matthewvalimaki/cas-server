@@ -37,6 +37,13 @@ func CreateNewProxyGrantingTicketIOU() (*types.Ticket, *types.CasError) {
     return &ticket, nil
 }
 
+// CreateNewProxyTicket creates new Proxy Ticket (PT)
+func CreateNewProxyTicket() (*types.Ticket, *types.CasError) {
+    ticket := createNewTicket("PT")
+    
+    return &ticket, nil
+}
+
 // CreateNewServiceTicket creates a new Service Ticket
 // see: https://jasig.github.io/cas/4.2.x/protocol/CAS-Protocol-Specification.html#service-ticket
 func CreateNewServiceTicket(strg storage.IStorage, serviceID string) (*types.Ticket, error) {
@@ -50,21 +57,40 @@ func CreateNewServiceTicket(strg storage.IStorage, serviceID string) (*types.Tic
     return &ticket, nil
 }
 
-// ValidateServiceTicket validates checks if given Service Ticket exists and is valid
+// ValidateServiceTicket checks if given Service Ticket exists and is valid
 func ValidateServiceTicket(strg storage.IStorage, ticket *types.Ticket) *types.CasError {   
     tools.LogST(ticket, "ticket validation requested")
     
-    if strg.DoesServiceTicketExist(ticket.Ticket) {
+    if strg.DoesTicketExist(ticket.Ticket) {
         tools.LogST(ticket, "ticket validation succeeded (ticket was found)")
 
-        strg.DeleteServiceTicket(ticket.Ticket)
+        strg.DeleteTicket(ticket.Ticket)
 
-        tools.LogST(ticket, "deleting ticket")
+        tools.LogST(ticket, "ticket deleted")
         
         return nil
     }
     
     tools.LogST(ticket, "ticket validation failed (ticket was not found)")
+    
+    return &types.CasError{Error: fmt.Errorf("The ticket `%s` is invalid.", ticket.Ticket), CasErrorCode: types.CAS_ERROR_CODE_INVALID_TICKET}
+}
+
+// ValidateProxyGrantingTicket checks if given PGT exists 
+func ValidateProxyGrantingTicket(strg storage.IStorage, ticket *types.Ticket) *types.CasError {   
+    tools.LogPGT(ticket, "ticket validation requested")
+    
+    if strg.DoesTicketExist(ticket.Ticket) {
+        tools.LogPGT(ticket, "ticket validation succeeded (ticket was found)")
+
+        strg.DeleteTicket(ticket.Ticket)
+
+        tools.LogPGT(ticket, "ticket deleted")
+        
+        return nil
+    }
+    
+    tools.LogPGT(ticket, "ticket validation failed (ticket was not found)")
     
     return &types.CasError{Error: fmt.Errorf("The ticket `%s` is invalid.", ticket.Ticket), CasErrorCode: types.CAS_ERROR_CODE_INVALID_TICKET}
 }

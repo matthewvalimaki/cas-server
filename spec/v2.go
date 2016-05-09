@@ -27,7 +27,7 @@ func proxyV2() {
 func proxyValidateV2() {
     // we use existing setup for `validate` as the behavior as well as the
     // output is 1:1 of what is required
-    http.HandleFunc("/v2/serviceValidate", setupValidateV2)
+    http.HandleFunc("/v2/proxyValidate", setupValidateV2)
 }
 
 func setupValidateV2(w http.ResponseWriter, r *http.Request) {

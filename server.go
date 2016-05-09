@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "net/http"
+    "flag"
     
     "github.com/matthewvalimaki/cas-server/admin"
     "github.com/matthewvalimaki/cas-server/tools"
@@ -12,10 +13,21 @@ import (
 )
 
 func main() {
-    config, err := tools.NewConfig()
+    var configPath string
+    // get configuration location
+    flag.StringVar(&configPath, "config", "", "Path to config file")
+    flag.Parse()
+    
+    if configPath == "" {
+        tools.Log("Command line argument `-config` must be set")
+        return
+    }
+    
+    config, err := tools.NewConfig(configPath)
     
     if err != nil {
         tools.Log(err.Error())
+        return
     }
     
     admin.SupportServices(config)

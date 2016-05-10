@@ -1,8 +1,6 @@
 package main
 
 import (
-    "fmt"
-    "net/http"
     "flag"
     
     "github.com/matthewvalimaki/cas-server/admin"
@@ -26,7 +24,7 @@ func main() {
     config, err := tools.NewConfig(configPath)
     
     if err != nil {
-        tools.Log(err.Error())
+        tools.LogError(err.Error())
         return
     }
     
@@ -39,8 +37,6 @@ func main() {
     spec.SupportV3()
     
     test.SupportTest()
-    
-    tools.Log(fmt.Sprintf("cas-server is starting up and binding to all interfaces with port `%d`", config.Port))
-    
-    http.ListenAndServe(":" + config.PortToString(), nil)
+
+    tools.StartServers(config)
 }

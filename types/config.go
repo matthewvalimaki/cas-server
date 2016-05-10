@@ -1,20 +1,11 @@
 package types
 
-import (
-    "strconv"
-)
-
 // Config contains all of configuration
 type Config struct {
-    Port int
+    Servers map[string]*Server
     Services map[string]*Service
     
     FlatServiceIDList map[string][]string
-}
-
-// PortToString converts integer port to string
-func (c Config) PortToString() string {
-    return strconv.Itoa(c.Port)
 }
 
 // FlattenServiceIDs takes all service ids and flattens them

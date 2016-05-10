@@ -1,0 +1,20 @@
+[Servers]
+[Servers.External]
+Port = 10000
+SSL = true
+CACert = "/etc/ssl/certs/external-bundle-ssl.ca-bundle"
+CAKey = "/etc/ssl/private/external-key-ssl.key"
+
+[Servers.Internal]
+Port = 10001
+SSL = true
+CACert = "/etc/ssl/certs/internal-bundle-ssl.ca-bundle"
+CAKey = "/etc/ssl/private/internal-key-ssl.key"
+
+[Services]
+[Services.Google]
+ID = ["https://google.com"]
+ProxyServices = ["Yahoo"]
+
+[Services.Yahoo]
+ID = ["https://yahoo.com"]

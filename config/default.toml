@@ -1,5 +1,0 @@
-Port = 10000
-
-[Services]
-[Services.Google]
-ID = ["https://google.com"]

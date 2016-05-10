@@ -3,7 +3,10 @@ Implementation of [JASIG CAS protocol] in Go lang. Supports all protocol version
 
 ## Configuration
 You can configure certain aspects of `cas-server` with command line arguments but majority of the configuration will
-require a [TOML] formatted configuration file.
+require a [TOML] formatted configuration file. For an example configuration please see `config/config.toml.example`.
+
+## Running
+`cas-server -config /etc/cas-server/config.toml`
 
 ## Features
 * Storage

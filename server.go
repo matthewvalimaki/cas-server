@@ -2,6 +2,11 @@ package main
 
 import (
     "flag"
+    "os"
+    "os/signal"
+    "syscall"
+    "time"
+    "runtime"
     
     "github.com/matthewvalimaki/cas-server/admin"
     "github.com/matthewvalimaki/cas-server/tools"
@@ -39,4 +44,17 @@ func main() {
     test.SupportTest()
 
     tools.StartServers(config)
+    
+    c := make(chan os.Signal, 1)
+    signal.Notify(c, os.Interrupt)
+    signal.Notify(c, syscall.SIGTERM)
+    go func() {
+        <-c
+        os.Exit(1)
+    }()
+    
+    for {
+        runtime.Gosched()
+        time.Sleep(5 * time.Second)
+    }
 }

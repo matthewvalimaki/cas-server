@@ -4,7 +4,6 @@ import (
     "fmt"
     "errors"
     "net/http"
-    "text/template"
     
     "github.com/matthewvalimaki/cas-server/tools"
     "github.com/matthewvalimaki/cas-server/validators"
@@ -25,12 +24,8 @@ func SupportV1(strgObject storage.IStorage, cfg *types.Config) {
     strg = strgObject
     config = cfg
           
-    login()
-    validate()
-}
-
-func login() {
-    http.HandleFunc("/v1/login", handleLogin)
+    http.HandleFunc("/login", handleLogin)
+    http.HandleFunc("/validate", setupValidate)
 }
 
 func handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -75,18 +70,11 @@ func loginResponse(casError *types.CasError, ticket *types.Ticket, w http.Respon
             w.WriteHeader(http.StatusInternalServerError)
         }
         
-        w.Header().Set("Content-Type", "application/xml;charset=UTF-8")
-        t, _ := template.ParseFiles(specTemplatePath + "v2ValidationFailure.tmpl")
-        
-        t.Execute(w, map[string]string {"Error": casError.Error.Error(), "CasErrorCode": casError.CasErrorCode.String()})
+        fmt.Fprintf(w, casError.Error.Error())
         return
     }
     
     http.Redirect(w, r, ticket.Service + "?ticket=" + ticket.Ticket, http.StatusFound)
-}
-
-func validate() {
-    http.HandleFunc("/v1/validate", setupValidate)
 }
 
 func setupValidate(w http.ResponseWriter, r *http.Request) {

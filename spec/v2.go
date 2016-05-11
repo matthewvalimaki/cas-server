@@ -1,33 +1,23 @@
 package spec
 
 import (
+    "fmt"
     "net/http"
-    "text/template"
 
     "github.com/matthewvalimaki/cas-server/types"
     "github.com/matthewvalimaki/cas-server/validators"
     "github.com/matthewvalimaki/cas-server/security"
+    "github.com/matthewvalimaki/cas-server/spec/xml"
 )
 
 // SupportV2 enables spec v2 support
 func SupportV2() {
-    validateV2()
-    proxyV2()
-    proxyValidateV2()
-}
-
-func validateV2() {
-    http.HandleFunc("/v2/serviceValidate", setupValidateV2)
-}
-
-func proxyV2() {
-    http.HandleFunc("/v2/proxy", setupProxyV2)
-}
-
-func proxyValidateV2() {
-    // we use existing setup for `validate` as the behavior as well as the
+    http.HandleFunc("/serviceValidate", setupValidateV2)
+    http.HandleFunc("/proxy", setupProxyV2)
+    
+    // use existing setup for `validate` as the behavior as well as the
     // output is 1:1 of what is required
-    http.HandleFunc("/v2/proxyValidate", setupValidateV2)
+    http.HandleFunc("/proxyValidate", setupValidateV2)
 }
 
 func setupValidateV2(w http.ResponseWriter, r *http.Request) {
@@ -110,16 +100,12 @@ func validateResponseV2(format string, casError *types.CasError, proxyGrantingTi
         w.Header().Set("Content-Type", "application/xml;charset=UTF-8")
         
         if casError != nil {
-            t, _ := template.ParseFiles("spec/tmpl/v2ValidationFailure.tmpl")
-            
-            t.Execute(w, map[string] string {"Error": casError.Error.Error(), "CasErrorCode": casError.CasErrorCode.String()})
+            fmt.Fprintf(w, xml.V2ValidationFailure(casError))
         } else {
-            t, _ := template.ParseFiles("spec/tmpl/v2ValidationSuccess.tmpl")
-            
-            t.Execute(w, map[string] string {"Username": "test", "proxyGrantingTicketIOU": proxyGrantingTicketIOU.Ticket})
+            fmt.Fprintf(w, xml.V2ValidationSuccess("test", proxyGrantingTicketIOU))
         }
     } else {
-
+        // todo support JSON
     }
 }
 
@@ -162,12 +148,8 @@ func proxyResponseV2(proxyTicket *types.Ticket, casError *types.CasError, w http
     w.Header().Set("Content-Type", "application/xml;charset=UTF-8")
     
     if casError != nil {
-        t, _ := template.ParseFiles("spec/tmpl/v2ProxyFailure.tmpl")
-        
-        t.Execute(w, map[string] string {"Error": casError.Error.Error(), "CasErrorCode": casError.CasErrorCode.String()})
+        fmt.Fprintf(w, xml.V2ProxyFailure(casError))
     } else {
-        t, _ := template.ParseFiles("spec/tmpl/v2ProxySuccess.tmpl")
-        
-        t.Execute(w, map[string] string {"ProxyTicket": proxyTicket.Ticket})
+        fmt.Fprintf(w, xml.V2ProxySuccess(proxyTicket))
     }
 }

@@ -1,7 +1,9 @@
 package validators
 
-import (   
+import ( 
+    "fmt" 
     "errors"
+    "regexp"
     
     "github.com/matthewvalimaki/cas-server/types"
 )
@@ -30,9 +32,11 @@ func validateServiceIDLength(ID string) *types.CasError {
 }
 
 func validateServiceID(serviceID string, config *types.Config) *types.CasError {
-    if _, ok := config.FlatServiceIDList[serviceID]; ok {
-        return nil
+    for supportedServiceID := range config.FlatServiceIDList {
+        if matched, _ := regexp.MatchString(supportedServiceID, serviceID); matched {
+            return nil
+        }
     }
 
-    return &types.CasError{Error: errors.New("Unknown service."), CasErrorCode: types.CAS_ERROR_CODE_INVALID_SERVICE}
+    return &types.CasError{Error: fmt.Errorf("Unknown service `%s`", serviceID), CasErrorCode: types.CAS_ERROR_CODE_INVALID_SERVICE}
 }

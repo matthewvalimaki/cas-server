@@ -4,6 +4,7 @@ import (
     "fmt"
     "errors"
     "net/http"
+    "strings"
     
     "github.com/matthewvalimaki/cas-server/tools"
     "github.com/matthewvalimaki/cas-server/validators"
@@ -50,7 +51,7 @@ func handleLogin(w http.ResponseWriter, r *http.Request) {
         return
     }    
     
-    service := r.URL.Query().Get("service")  
+    service := r.URL.Query().Get("service") 
     err = validators.ValidateService(service, config)
     if err != nil {
         loginResponse(err, nil, w, r)
@@ -74,7 +75,11 @@ func loginResponse(casError *types.CasError, ticket *types.Ticket, w http.Respon
         return
     }
     
-    http.Redirect(w, r, ticket.Service + "?ticket=" + ticket.Ticket, http.StatusFound)
+    if strings.Contains(ticket.Service, "?") {
+        http.Redirect(w, r, ticket.Service + "&ticket=" + ticket.Ticket, http.StatusFound)
+    } else {
+        http.Redirect(w, r, ticket.Service + "?ticket=" + ticket.Ticket, http.StatusFound)
+    }
 }
 
 func setupValidate(w http.ResponseWriter, r *http.Request) {

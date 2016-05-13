@@ -15,15 +15,10 @@ var (
 // SupportServices adds support for services related admin feature
 func SupportServices(cfg *types.Config) {
     config = cfg
-    
-    servicesEndpoint()
 }
 
-func servicesEndpoint() {
-    http.HandleFunc("/admin/services", handleValidate)
-}
-
-func handleValidate(w http.ResponseWriter, r *http.Request) {
+// HandleServices handles `/admin/services` request
+func HandleServices(w http.ResponseWriter, r *http.Request) {
     tools.LogAdmin("Service listing requested")
     
     js, err := json.Marshal(config)

@@ -10,23 +10,17 @@ import (
     "github.com/matthewvalimaki/cas-server/spec/xml"
 )
 
-// SupportV2 enables spec v2 support
-func SupportV2() {
-    http.HandleFunc("/serviceValidate", setupValidateV2)
-    http.HandleFunc("/proxy", setupProxyV2)
-    
-    // use existing setup for `validate` as the behavior as well as the
-    // output is 1:1 of what is required
-    http.HandleFunc("/proxyValidate", setupValidateV2)
-}
-
-func setupValidateV2(w http.ResponseWriter, r *http.Request) {
+// HandleValidateV2 handles `/serviceValidate` request
+func HandleValidateV2(w http.ResponseWriter, r *http.Request) {
     // do format check here as it will affect response format
     format := r.URL.Query().Get("format")
     if len(format) > 0 {
         err := validators.ValidateFormat(format)
-        validateResponseV2("XML", err, nil, w, r)
-        return
+        
+        if err != nil {
+            validateResponseV2("XML", err, nil, w, r)
+            return
+        }
     }
     if len(format) == 0 {
         format = "XML"
@@ -49,6 +43,7 @@ func setupValidateV2(w http.ResponseWriter, r *http.Request) {
         strg.SaveTicket(proxyGrantingTicket)
         
         validateResponseV2(format, nil, proxyGrantingTicketIOU, w, r)
+        return
     }
 
     validateResponseV2(format, nil, nil, w, r)
@@ -83,6 +78,9 @@ func runValidatorsV2(w http.ResponseWriter, r *http.Request) (service *types.Ser
             return nil, "", nil, nil, err
         }
         
+        strg.SaveTicket(proxyGrantingTicket)
+        strg.SaveTicket(proxyGrantingTicketIOU)
+        
         // reach out to proxy and then validate behavior
         err = validators.SendAndValidateProxyIDAndIOU(pgtURL, proxyGrantingTicket, proxyGrantingTicketIOU)
         if err != nil {
@@ -98,18 +96,20 @@ func runValidatorsV2(w http.ResponseWriter, r *http.Request) (service *types.Ser
 func validateResponseV2(format string, casError *types.CasError, proxyGrantingTicketIOU *types.Ticket, w http.ResponseWriter, r *http.Request) {
     if format == "XML" {
         w.Header().Set("Content-Type", "application/xml;charset=UTF-8")
-        
-        if casError != nil {
-            fmt.Fprintf(w, xml.V2ValidationFailure(casError))
-        } else {
-            fmt.Fprintf(w, xml.V2ValidationSuccess("test", proxyGrantingTicketIOU))
-        }
     } else {
-        // todo support JSON
+        w.Header().Set("Content-Type", "application/json;charset=UTF-8")
     }
+
+    if casError != nil {
+        fmt.Fprintf(w, xml.V2ValidationFailure(casError, format))
+        return
+    }
+    
+    fmt.Fprintf(w, xml.V2ValidationSuccess("test", proxyGrantingTicketIOU, format))
 }
 
-func setupProxyV2(w http.ResponseWriter, r *http.Request) {
+// HandleProxyV2 handles `proxy` request
+func HandleProxyV2(w http.ResponseWriter, r *http.Request) {
     err := runProxyValidatorsV2(w, r)
     if err != nil {
         proxyResponseV2(nil, err, w, r)

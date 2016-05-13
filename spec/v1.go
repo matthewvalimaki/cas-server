@@ -24,12 +24,10 @@ var (
 func SupportV1(strgObject storage.IStorage, cfg *types.Config) {
     strg = strgObject
     config = cfg
-          
-    http.HandleFunc("/login", handleLogin)
-    http.HandleFunc("/validate", setupValidate)
 }
 
-func handleLogin(w http.ResponseWriter, r *http.Request) {
+// HandleLogin handles calls to login
+func HandleLogin(w http.ResponseWriter, r *http.Request) {
     if config == nil {
         err := &types.CasError{Error: errors.New("`config` has not been set"), CasErrorCode: types.CAS_ERROR_CODE_INTERNAL_ERROR}
         loginResponse(err, nil, w, r)
@@ -82,7 +80,8 @@ func loginResponse(casError *types.CasError, ticket *types.Ticket, w http.Respon
     }
 }
 
-func setupValidate(w http.ResponseWriter, r *http.Request) {
+// HandleValidate handles validation request
+func HandleValidate(w http.ResponseWriter, r *http.Request) {
     serviceTicket, err := runValidators(w, r)
     
     if err != nil {
@@ -95,7 +94,6 @@ func setupValidate(w http.ResponseWriter, r *http.Request) {
 
 func runValidators(w http.ResponseWriter, r *http.Request) (*types.Ticket, *types.CasError) {
     ticket := r.URL.Query().Get("ticket")
-    
     err := validators.ValidateTicket(ticket)
     if err != nil {
         return nil, err

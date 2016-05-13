@@ -48,6 +48,8 @@ func validateTicketFormat(ticket string) *types.CasError {
         return nil
     } else if ticket[0:4] == "PGT-" {
         return nil
+    }  else if ticket[0:3] == "PT-" {
+        return nil
     }
 
     return &types.CasError{Error: errors.New("Required ticket prefix is missing. Supported prefixes are: [ST, PGT]"), CasErrorCode: types.CAS_ERROR_CODE_INVALID_TICKET_SPEC}

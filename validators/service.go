@@ -15,7 +15,7 @@ func ValidateService(ID string, config *types.Config) (*types.CasError) {
         return err
     }
     
-    err = validateServiceID(ID, config)    
+    _, err = validateServiceID(ID, config)    
     if err != nil {
         return err
     }
@@ -31,12 +31,12 @@ func validateServiceIDLength(ID string) *types.CasError {
     return nil
 }
 
-func validateServiceID(serviceID string, config *types.Config) *types.CasError {
+func validateServiceID(serviceID string, config *types.Config) (serviceKeys []string, casError *types.CasError) {
     for supportedServiceID := range config.FlatServiceIDList {
         if matched, _ := regexp.MatchString(supportedServiceID, serviceID); matched {
-            return nil
+            return config.FlatServiceIDList[supportedServiceID], nil
         }
     }
 
-    return &types.CasError{Error: fmt.Errorf("Unknown service `%s`", serviceID), CasErrorCode: types.CAS_ERROR_CODE_INVALID_SERVICE}
+    return nil, &types.CasError{Error: fmt.Errorf("Unknown service `%s`", serviceID), CasErrorCode: types.CAS_ERROR_CODE_INVALID_SERVICE}
 }

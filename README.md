@@ -5,6 +5,11 @@ Implementation of [JASIG CAS protocol] in Go lang. Supports all protocol version
 You can configure certain aspects of `cas-server` with command line arguments but majority of the configuration will
 require a [TOML] formatted configuration file. For an example configuration please see `config/config.toml.example`.
 
+### Options
+|Section | Key | Type    | Example                  | Notes                     |
+|--------| --- |:-------:| :----------------------- | :------------------------ |
+|Services| ID  | [array] | ["https://google.com.*"] | Go [regexp] is supported. |
+
 ## Running
 `cas-server -config /etc/cas-server/config.toml`
 
@@ -21,3 +26,5 @@ require a [TOML] formatted configuration file. For an example configuration plea
 [JASIG CAS protocol]: https://jasig.github.io/cas/4.2.x/protocol/CAS-Protocol-Specification.html
 [JASIG CAS]: https://github.com/Jasig/cas
 [TOML]: https://github.com/toml-lang/toml
+[array]: https://github.com/toml-lang/toml#user-content-array
+[regexp]: https://golang.org/pkg/regexp/
